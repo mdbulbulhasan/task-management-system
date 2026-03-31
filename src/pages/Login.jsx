@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../AuthenticationPage/Authentication";
+import { Button, Checkbox, Form, Input } from "antd";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loading, error, clearError, isAuthenticated } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const { login, loading, error, isAuthenticated } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -14,15 +14,9 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
-    if (error) clearError();
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const result = await login(form.email, form.password);
+  const handleSubmit = async (values) => {
+    console.log("Submitting login form with:", values);
+    const result = await login(values.email, values.password);
     if (result.success) {
       navigate("/");
     }
@@ -33,35 +27,43 @@ const Login = () => {
       <div className="bg-white p-8 rounded shadow w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
         {error && <p className="text-red-500 mb-2">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
+        <Form
+          onFinish={handleSubmit}
+          name="basic"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          style={{ maxWidth: 600 }}
+          initialValues={{ remember: true }}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Email"
             name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2 rounded"
-            required
             disabled={loading}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2 rounded"
-            required
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded w-full mt-2 disabled:opacity-50"
-            disabled={loading}
+            rules={[{ required: true, message: "Please input your email!" }]}
           >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Password"
+            name="password"
+            disabled={loading}
+            rules={[{ required: true, message: "Please input your password!" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+
+          <Form.Item name="remember" valuePropName="checked" label={null}>
+            <Checkbox>Remember me</Checkbox>
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </Button>
+          </Form.Item>
+        </Form>
         <p className="mt-4 text-sm text-center">
           Don't have an account?{" "}
           <Link to="/register" className="text-blue-500">

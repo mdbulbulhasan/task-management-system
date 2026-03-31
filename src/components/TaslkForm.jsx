@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { DatePicker } from "antd";
 
 const TaskForm = ({ onSubmit, editingTask }) => {
   // Initialize with editingTask if exists, otherwise defaults
-  const [task, setTask] = useState(editingTask || {
-    title: "",
-    description: "",
-    status: "Todo",
-    priority: "Low",
-    dueDate: "",
-    category: "",
-  });
+  const [task, setTask] = useState(
+    editingTask || {
+      title: "",
+      description: "",
+      status: "Todo",
+      priority: "Low",
+      dueDate: "",
+      category: "",
+    },
+  );
 
   // Whenever editingTask changes, reset form safely
   useEffect(() => {
@@ -90,11 +93,14 @@ const TaskForm = ({ onSubmit, editingTask }) => {
           <option>High</option>
         </select>
       </div>
-      <input
-        type="date"
-        name="dueDate"
-        value={task.dueDate ? task.dueDate.split("T")[0] : ""}
-        onChange={handleChange}
+      <DatePicker
+        selected={task.dueDate ? new Date(task.dueDate) : null}
+        onChange={(date) =>
+          setTask((prev) => ({
+            ...prev,
+            dueDate: date ? date.toISOString() : "",
+          }))
+        }
         className="border p-2 w-full mb-2 rounded"
       />
       <input
@@ -103,7 +109,7 @@ const TaskForm = ({ onSubmit, editingTask }) => {
         placeholder="Category/Tag"
         value={task.category}
         onChange={handleChange}
-        className="border p-2 w-full mb-2 rounded"
+        className="border p-2 w-full mb-2 mt-2 rounded"
       />
       <button
         type="submit"
