@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../AuthenticationPage/Authentication";
+import { Button, Form, Input } from "antd";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, loading, error, clearError, isAuthenticated } = useAuth();
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const [localError, setLocalError] = useState(null);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -18,68 +15,85 @@ const Register = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
-    if (error) clearError();
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+  const handleSubmit = async (values) => {
+    const { email, password, confirmPassword } = values;
+    if (password !== confirmPassword) {
+      setLocalError("Passwords do not match");
       return;
     }
-    const result = await register(form.email, form.password);
+
+    setLocalError(null);
+    const result = await register(email, password);
     if (result.success) {
       navigate("/");
     }
+  };
+
+  const handleValuesChange = () => {
+    if (error) clearError();
+    if (localError) setLocalError(null);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded shadow w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4 text-center">Register</h1>
-        {error && <p className="text-red-500 mb-2">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
+        {(error || localError) && (
+          <p className="text-red-500 mb-2">{localError || error}</p>
+        )}
+
+        <Form
+          name="register"
+          layout="vertical"
+          onFinish={handleSubmit}
+          onValuesChange={handleValuesChange}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Email"
             name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2 rounded"
-            required
-            disabled={loading}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2 rounded"
-            required
-            disabled={loading}
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2 rounded"
-            required
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded w-full mt-2 disabled:opacity-50"
-            disabled={loading}
+            rules={[
+              { required: true, message: "Please input your email!" },
+              { type: "email", message: "Please enter a valid email!" },
+            ]}
           >
-            {loading ? "Registering..." : "Register"}
-          </button>
-        </form>
+            <Input disabled={loading} />
+          </Form.Item>
+
+          <Form.Item
+            label="Password"
+            name="password"
+            rules={[{ required: true, message: "Please input your password!" }]}
+          >
+            <Input.Password disabled={loading} />
+          </Form.Item>
+
+          <Form.Item
+            label="Confirm Password"
+            name="confirmPassword"
+            dependencies={["password"]}
+            rules={[
+              { required: true, message: "Please confirm your password!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("The two passwords do not match!"));
+                },
+              }),
+            ]}
+          >
+            <Input.Password disabled={loading} />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+            </Button>
+          </Form.Item>
+        </Form>
+
         <p className="mt-4 text-sm text-center">
           Already have an account?{" "}
           <Link to="/login" className="text-blue-500">
