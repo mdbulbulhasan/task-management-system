@@ -1,50 +1,62 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../AuthenticationPage/Authentication";
-import { Button, Form, Input } from "antd";
+import { Button, Checkbox, Form, Input, Card, Typography } from "antd";
+import { MailOutlined, LockOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, loading, error, clearError, isAuthenticated } = useAuth();
   const [localError, setLocalError] = useState(null);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (values) => {
-    const { email, password, confirmPassword } = values;
-    if (password !== confirmPassword) {
-      setLocalError("Passwords do not match");
-      return;
-    }
-
-    setLocalError(null);
-    const result = await register(email, password);
-    if (result.success) {
-      navigate("/");
-    }
-  };
-
   const handleValuesChange = () => {
     if (error) clearError();
     if (localError) setLocalError(null);
   };
 
+  const handleSubmit = async (values) => {
+    if (values.password !== values.confirmPassword) {
+      setLocalError("Passwords do not match");
+      return;
+    }
+
+    const result = await register(values.email, values.password);
+    if (result.success) {
+      navigate("/");
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">Register</h1>
+    <div className="flex items-center justify-center min-h-screen bg-linear-to-b from-blue-50 to-white">
+      <Card
+        className="w-full max-w-md p-8 shadow-lg"
+        style={{ borderRadius: 16 }}
+      >
+        <Title level={2} className="text-center mb-4">
+          Create Account
+        </Title>
+        <Text className="text-center text-gray-500 block mb-6">
+          Register to start organizing your tasks
+        </Text>
+
         {(error || localError) && (
-          <p className="text-red-500 mb-2">{localError || error}</p>
+          <Text type="danger" className="block mb-4 text-center">
+            {localError || error}
+          </Text>
         )}
 
         <Form
           name="register"
           layout="vertical"
+          initialValues={{ remember: true }}
           onFinish={handleSubmit}
           onValuesChange={handleValuesChange}
           autoComplete="off"
@@ -57,7 +69,11 @@ const Register = () => {
               { type: "email", message: "Please enter a valid email!" },
             ]}
           >
-            <Input disabled={loading} />
+            <Input
+              prefix={<MailOutlined />}
+              placeholder="name@example.com"
+              disabled={loading}
+            />
           </Form.Item>
 
           <Form.Item
@@ -65,7 +81,11 @@ const Register = () => {
             name="password"
             rules={[{ required: true, message: "Please input your password!" }]}
           >
-            <Input.Password disabled={loading} />
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Enter your password"
+              disabled={loading}
+            />
           </Form.Item>
 
           <Form.Item
@@ -79,28 +99,33 @@ const Register = () => {
                   if (!value || getFieldValue("password") === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error("The two passwords do not match!"));
+                  return Promise.reject(new Error("Passwords do not match!"));
                 },
               }),
             ]}
           >
-            <Input.Password disabled={loading} />
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Confirm your password"
+              disabled={loading}
+            />
+          </Form.Item>
+
+          <Form.Item name="remember" valuePropName="checked">
+            <Checkbox disabled={loading}>Remember me</Checkbox>
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block disabled={loading}>
+            <Button type="primary" htmlType="submit" block loading={loading}>
               {loading ? "Registering..." : "Register"}
             </Button>
           </Form.Item>
         </Form>
 
-        <p className="mt-4 text-sm text-center">
-          Already have an account?{" "}
-          <Link to="/login" className="text-blue-500">
-            Login
-          </Link>
-        </p>
-      </div>
+        <Text className="text-center text-sm block">
+          Already have an account? <Link to="/login">Login</Link>
+        </Text>
+      </Card>
     </div>
   );
 };

@@ -1,13 +1,15 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../AuthenticationPage/Authentication";
-import { Button, Checkbox, Form, Input } from "antd";
+import { Button, Checkbox, Form, Input, Card, Typography } from "antd";
+import { MailOutlined, LockOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, loading, error, isAuthenticated } = useAuth();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
       navigate("/");
@@ -15,7 +17,6 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (values) => {
-    console.log("Submitting login form with:", values);
     const result = await login(values.email, values.password);
     if (result.success) {
       navigate("/");
@@ -23,54 +24,73 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
-        {error && <p className="text-red-500 mb-2">{error}</p>}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Card
+        className="w-full max-w-md p-8 shadow-lg"
+        style={{ borderRadius: 16 }}
+      >
+        <Title level={2} className="text-center mb-4">
+          Welcome Back
+        </Title>
+        <Text className="text-center text-gray-500 block mb-6">
+          Login to continue managing your tasks
+        </Text>
+
+        {error && (
+          <Text type="danger" className="block mb-4 text-center">
+            {error}
+          </Text>
+        )}
+
         <Form
-          onFinish={handleSubmit}
-          name="basic"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
-          style={{ maxWidth: 600 }}
+          name="login"
+          layout="vertical"
           initialValues={{ remember: true }}
+          onFinish={handleSubmit}
           autoComplete="off"
         >
           <Form.Item
             label="Email"
             name="email"
-            disabled={loading}
-            rules={[{ required: true, message: "Please input your email!" }]}
+            rules={[
+              { required: true, message: "Please input your email!" },
+              { type: "email", message: "Please enter a valid email!" },
+            ]}
           >
-            <Input />
+            <Input
+              prefix={<MailOutlined />}
+              placeholder="name@example.com"
+              disabled={loading}
+            />
           </Form.Item>
 
           <Form.Item
             label="Password"
             name="password"
-            disabled={loading}
             rules={[{ required: true, message: "Please input your password!" }]}
           >
-            <Input.Password />
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Enter your password"
+              disabled={loading}
+            />
           </Form.Item>
 
-          <Form.Item name="remember" valuePropName="checked" label={null}>
-            <Checkbox>Remember me</Checkbox>
+          <Form.Item name="remember" valuePropName="checked">
+            <Checkbox disabled={loading}>Remember me</Checkbox>
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <Button type="primary" htmlType="submit" block loading={loading}>
+              Login
             </Button>
           </Form.Item>
         </Form>
-        <p className="mt-4 text-sm text-center">
-          Don't have an account?{" "}
-          <Link to="/register" className="text-blue-500">
-            Register
-          </Link>
-        </p>
-      </div>
+
+        <Text className="text-center text-sm block">
+          Don&apos;t have an account? <Link to="/register">Register</Link>
+        </Text>
+      </Card>
     </div>
   );
 };
